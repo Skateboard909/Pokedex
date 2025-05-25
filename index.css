@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokedex - First 50 (Animated)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+        }
+
+        /* Keyframes for card entrance animation */
+        @keyframes cardEnter {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .pokedex-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem; 
+            padding: 2rem; 
+            max-width: 1600px; 
+            margin: 0 auto;
+        }
+
+        .pokemon-card {
+            background-color: white;
+            border-radius: 12px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden; 
+            /* Apply card entrance animation */
+            animation: cardEnter 0.5s ease-out forwards;
+            /* Stagger animation for subsequently loaded cards if JS adds them one by one or with a delay */
+            /* For this example, all cards will animate in together after fetch */
+        }
+
+        .pokemon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Image hover animation */
+        .pokemon-card:hover .pokemon-image {
+            transform: scale(1.1);
+        }
+
+        .pokemon-image-container {
+            width: 150px; 
+            height: 150px;
+            background-color: #f8f9fa; 
+            border-radius: 50%; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            overflow: hidden; 
+        }
+
+        .pokemon-image {
+            width: 90%; 
+            height: 90%;
+            object-fit: contain; 
+            transition: transform 0.3s ease; /* Smooth transition for scaling */
+        }
+
+        .pokemon-id {
+            font-size: 0.875rem;
+            color: #6b7280; 
+            margin-bottom: 0.25rem;
+        }
+
+        .pokemon-name {
+            font-size: 1.75rem; 
+            font-weight: 700; 
+            color: #1f2937; 
+            margin-bottom: 0.75rem;
+            text-transform: capitalize;
+        }
+
+        .pokemon-types {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .type-badge {
+            padding: 0.3rem 0.8rem; 
+            border-radius: 16px; 
+            font-size: 0.75rem;
+            font-weight: 600; 
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s ease-out; /* Smooth transition for scaling */
+        }
+
+        /* Type badge hover animation */
+        .type-badge:hover {
+            transform: scale(1.15);
+        }
+
+        .pokemon-stats {
+            width: 100%;
+        }
+
+        .stat {
+            margin-bottom: 0.6rem; 
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-name {
+            font-size: 0.875rem;
+            color: #4b5563; 
+            width: 100px; 
+            text-transform: capitalize;
+            flex-shrink: 0; 
+        }
+        
+        .stat-value {
+            font-size: 0.875rem;
+            color: #1f2937;
+            font-weight: 600;
+            min-width: 30px; 
+            text-align: right;
+        }
+
+        .stat-bar-container {
+            flex-grow: 1;
+            height: 12px; 
+            background-color: #e5e7eb; 
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 0 0.75rem; 
+        }
+
+        .stat-bar {
+            height: 100%;
+            border-radius: 6px;
+            width: 0%; /* Initial width for animation */
+            transition: width 1s ease-in-out 0.5s; /* Added a slight delay to start after card entrance */
+        }
+
+        /* Type Colors */
+        .type-normal { background-color: #A8A77A; }
+        .type-fire { background-color: #EE8130; }
+        .type-water { background-color: #6390F0; }
+        .type-electric { background-color: #F7D02C; }
+        .type-grass { background-color: #7AC74C; }
+        .type-ice { background-color: #96D9D6; }
+        .type-fighting { background-color: #C22E28; }
+        .type-poison { background-color: #A33EA1; }
+        .type-ground { background-color: #E2BF65; }
+        .type-flying { background-color: #A98FF3; }
+        .type-psychic { background-color: #F95587; }
+        .type-bug { background-color: #A6B91A; }
+        .type-rock { background-color: #B6A136; }
+        .type-ghost { background-color: #735797; }
+        .type-dragon { background-color: #6F35FC; }
+        .type-dark { background-color: #705746; }
+        .type-steel { background-color: #B7B7CE; }
+        .type-fairy { background-color: #D685AD; }
+
+        /* Stat Bar Colors */
+        .hp-bar { background-color: #FF5959; } 
+        .attack-bar { background-color: #F5AC78; } 
+        .defense-bar { background-color: #FAE078; } 
+        .special-attack-bar { background-color: #9DB7F5; } 
+        .special-defense-bar { background-color: #A7DB8D; } 
+        .speed-bar { background-color: #FA92B2; } 
+        .experience-bar { background-color: #A8A878; } 
+
+        #loading-message {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #374151;
+            padding: 3rem;
+            width: 100%;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .pokedex-container {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .pokemon-card {
+                padding: 1rem;
+            }
+            .pokemon-name {
+                font-size: 1.5rem;
+            }
+            .pokemon-image-container {
+                width: 120px;
+                height: 120px;
+            }
+        }
+         @media (max-width: 480px) {
+            .pokedex-container {
+                grid-template-columns: 1fr; 
+            }
+             .stat {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .stat-bar-container {
+                width: 100%;
+                margin: 0.25rem 0; 
+            }
+            .stat-name {
+                width: auto; 
+                margin-bottom: 0.25rem;
+            }
+            .stat-value {
+                align-self: flex-end; 
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-red-600 p-6 shadow-md">
+        <h1 class="text-4xl font-bold text-white text-center tracking-tight">My Pokédex</h1>
+    </header>
+
+    <div id="pokedex-container" class="pokedex-container">
+        </div>
+    <div id="loading-message">
+        <p>Catching 'em all... Please wait!</p>
+        <div class="mt-4 flex justify-center items-center">
+            <svg class="animate-spin h-8 w-8 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const pokedexContainer = document.getElementById('pokedex-container');
+        const loadingMessage = document.getElementById('loading-message');
+        const POKEMON_COUNT = 50; // Fetching the first 50 Pokemon
+        const API_URL = 'https://pokeapi.co/api/v2/pokemon/';
+
+        // Max values for scaling stat bars (approximate, can be adjusted for better visualization)
+        const MAX_STATS = {
+            hp: 255,
+            attack: 190,        // Corresponds to "Damage"
+            defense: 230,
+            'special-attack': 194,
+            'special-defense': 230,
+            speed: 180,
+            experience: 650     // Base experience (XP)
+        };
+
+        // Function to fetch data for a single Pokemon
+        async function fetchPokemonData(id) {
+            try {
+                const response = await fetch(`${API_URL}${id}`);
+                if (!response.ok) {
+                    console.error(`HTTP error! status: ${response.status} for Pokemon ID: ${id}`);
+                    throw new Error(`Failed to fetch data for Pokemon ID: ${id}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error(`Error fetching Pokemon ID ${id}:`, error.message);
+                return null; 
+            }
+        }
+
+        // Function to create a Pokemon card HTML element
+        function createPokemonCard(pokemon) {
+            if (!pokemon) return null; 
+
+            const card = document.createElement('div');
+            card.classList.add('pokemon-card');
+            // Set initial opacity to 0 if we want to control fade-in via JS,
+            // but CSS animation 'cardEnter' handles this.
+            // card.style.opacity = 0; // Example if JS controlled fade-in
+
+            const imageUrl = pokemon.sprites.other?.['official-artwork']?.front_default || 
+                             pokemon.sprites.front_default || 
+                             'https://placehold.co/150x150/e0e0e0/333?text=No+Image';
+            
+            let typesHtml = pokemon.types.map(typeInfo => 
+                `<span class="type-badge type-${typeInfo.type.name.toLowerCase()}">${typeInfo.type.name}</span>`
+            ).join('');
+
+            let statsHtml = '';
+            const relevantStats = ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'];
+            
+            relevantStats.forEach(statName => {
+                const statObject = pokemon.stats.find(s => s.stat.name === statName);
+                const statValue = statObject ? statObject.base_stat : 0;
+                const statPercentage = Math.min(100, (statValue / (MAX_STATS[statName] || 100)) * 100);
+                const barClass = `${statName.replace('-', '')}-bar`; // Ensure hyphen is removed for class if needed by CSS, or use as is. Current CSS uses hyphen.
+                                                                    // Corrected: CSS classes like .hp-bar, .attack-bar are fine.
+                statsHtml += `
+                    <div class="stat">
+                        <span class="stat-name">${statName.replace('-', ' ')}</span>
+                        <div class="stat-bar-container">
+                            <div class="stat-bar ${statName}-bar" data-value="${statPercentage}"></div>
+                        </div>
+                        <span class="stat-value">${statValue}</span>
+                    </div>
+                `;
+            });
+
+            const experience = pokemon.base_experience || 0;
+            const experiencePercentage = Math.min(100, (experience / (MAX_STATS.experience || 100)) * 100);
+             statsHtml += `
+                <div class="stat">
+                    <span class="stat-name">XP</span>
+                    <div class="stat-bar-container">
+                        <div class="stat-bar experience-bar" data-value="${experiencePercentage}"></div>
+                    </div>
+                    <span class="stat-value">${experience}</span>
+                </div>
+            `;
+
+            card.innerHTML = `
+                <div class="pokemon-id">#${String(pokemon.id).padStart(3, '0')}</div>
+                <div class="pokemon-image-container">
+                    <img src="${imageUrl}" alt="${pokemon.name}" class="pokemon-image" onerror="this.onerror=null;this.src='https://placehold.co/150x150/e0e0e0/333?text=Img+Error';">
+                </div>
+                <h2 class="pokemon-name">${pokemon.name}</h2>
+                <div class="pokemon-types">${typesHtml}</div>
+                <div class="pokemon-stats">${statsHtml}</div>
+            `;
+            return card; 
+        }
+
+        // Function to fetch all Pokemon and display them
+        async function fetchAllPokemon() {
+            loadingMessage.style.display = 'block'; 
+            pokedexContainer.innerHTML = ''; 
+
+            const pokemonPromises = [];
+            for (let i = 1; i <= POKEMON_COUNT; i++) {
+                pokemonPromises.push(fetchPokemonData(i));
+            }
+
+            try {
+                const results = await Promise.all(pokemonPromises); 
+                
+                results.forEach((pokemonData, index) => {
+                    const cardElement = createPokemonCard(pokemonData); 
+                    if (cardElement instanceof HTMLElement) { 
+                        // Stagger card animation slightly using animation-delay
+                        // The CSS animation 'cardEnter' will apply to all cards.
+                        // If we want JS-controlled stagger, we'd add classes/styles here.
+                        // For simplicity, the CSS animation applies, and the stat bar delay is global.
+                        pokedexContainer.appendChild(cardElement);
+                    } else if (pokemonData === null) {
+                        console.warn(`Skipped card for a Pokémon whose data failed to load (ID index: ${index + 1}).`);
+                    }
+                });
+
+                // Animate stat bars after cards are in DOM and their entrance animation has likely started/finished.
+                // The CSS for .stat-bar already includes a transition-delay.
+                setTimeout(() => {
+                    const statBars = document.querySelectorAll('.stat-bar');
+                    statBars.forEach(bar => {
+                        const value = bar.getAttribute('data-value');
+                        if (value) {
+                            bar.style.width = value + '%'; 
+                        }
+                    });
+                }, 100); // This timeout ensures bars animate after DOM update. The CSS delay on .stat-bar handles visual timing.
+
+
+            } catch (error) {
+                console.error("A critical error occurred while fetching Pokemon data:", error);
+                pokedexContainer.innerHTML = ''; 
+                loadingMessage.innerHTML = '<p class="text-red-500 font-semibold">Oops! Could not load Pokémon data. Please check your internet connection and try refreshing.</p>';
+                loadingMessage.style.display = 'block'; 
+                return; 
+            }
+            
+            if (pokedexContainer.children.length > 0) {
+                 loadingMessage.style.display = 'none';
+            } else if (!results.some(r => r !== null)) { 
+                 loadingMessage.innerHTML = '<p class="text-red-500 font-semibold">Failed to load any Pokémon data. Please check your connection and the API status.</p>';
+                 loadingMessage.style.display = 'block';
+            }
+        }
+
+        // Initial call
+        fetchAllPokemon();
+    </script>
+</body>
+</html>
